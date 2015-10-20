@@ -22,46 +22,69 @@ package org.jahia.modules.unomi_tweet_button_plugin.actions;
  * #L%
  */
 
-import org.oasis_open.contextserver.api.Event;
-import org.oasis_open.contextserver.api.Metadata;
-import org.oasis_open.contextserver.api.Profile;
-import org.oasis_open.contextserver.api.PropertyType;
+import org.oasis_open.contextserver.api.*;
 import org.oasis_open.contextserver.api.actions.Action;
 import org.oasis_open.contextserver.api.actions.ActionExecutor;
 import org.oasis_open.contextserver.api.services.EventService;
 import org.oasis_open.contextserver.api.services.ProfileService;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Increments the number of times the user associated with the profile tweeted.
  */
 public class IncrementTweetNumberAction implements ActionExecutor {
     private static final String TWEET_NB_PROPERTY = "tweetNb";
+    private static final String TWEETED_FROM_PROPERTY = "tweetedFrom";
     private ProfileService service;
 
     public int execute(Action action, Event event) {
         final Profile profile = event.getProfile();
-        final Integer tweetNb = (Integer) profile.getProperty(TWEET_NB_PROPERTY);
+        Integer tweetNb = (Integer) profile.getProperty(TWEET_NB_PROPERTY);
+        List<String> tweetedFrom = (List<String>) profile.getProperty(TWEETED_FROM_PROPERTY);
 
-        if (tweetNb == null) {
-            // check if the property type exists
-            PropertyType propertyType = service.getPropertyType(TWEET_NB_PROPERTY);
-            if (propertyType == null) {
-                // create it
-                propertyType = new PropertyType(new Metadata(event.getScope(), TWEET_NB_PROPERTY, TWEET_NB_PROPERTY, "Number of times a user tweeted"));
-                propertyType.setValueTypeId("integer");
-                service.createPropertyType(propertyType);
-            }
+        if (tweetNb == null || tweetedFrom == null) {
+            // create tweet number property type
+            PropertyType propertyType = new PropertyType(new Metadata(event.getScope(), TWEET_NB_PROPERTY, TWEET_NB_PROPERTY, "Number of times a user tweeted"));
+            propertyType.setValueTypeId("integer");
+            service.createPropertyType(propertyType);
 
-            profile.setProperty(TWEET_NB_PROPERTY, 1);
+            // create tweeted from property type
+            propertyType = new PropertyType(new Metadata(event.getScope(), TWEETED_FROM_PROPERTY, TWEETED_FROM_PROPERTY, "The list of pages a user tweeted from"));
+            propertyType.setValueTypeId("string");
+            propertyType.setMultivalued(true);
+            service.createPropertyType(propertyType);
 
-        } else {
-            profile.setProperty(TWEET_NB_PROPERTY, tweetNb + 1);
+            tweetNb = 0;
+            tweetedFrom = new ArrayList<>();
         }
+
+        profile.setProperty(TWEET_NB_PROPERTY, tweetNb + 1);
+        final String sourceURL = extractSourceURL(event);
+        if (sourceURL != null) {
+            tweetedFrom.add(sourceURL);
+        }
+        profile.setProperty(TWEETED_FROM_PROPERTY, tweetedFrom);
 
         return EventService.PROFILE_UPDATED;
     }
 
     public void setProfileService(ProfileService service) {
         this.service = service;
+    }
+
+    private String extractSourceURL(Event event) {
+        final Item sourceAsItem = event.getSource();
+        if (sourceAsItem instanceof CustomItem) {
+            CustomItem source = (CustomItem) sourceAsItem;
+            final Map<String, Object> pageInfo = (Map<String, Object>) source.getProperties().get("pageInfo");
+            if (pageInfo != null) {
+                return (String) pageInfo.get("destinationURL");
+            }
+        }
+
+        return null;
     }
 }
