@@ -1,4 +1,4 @@
-package org.jahia.modules.unomi_tweet_button_plugin.actions;
+package org.apache.unomi.examples.unomi_tweet_button_plugin.actions;
 
 /*
  * #%L
@@ -22,15 +22,14 @@ package org.jahia.modules.unomi_tweet_button_plugin.actions;
  * #L%
  */
 
-import org.oasis_open.contextserver.api.*;
-import org.oasis_open.contextserver.api.actions.Action;
-import org.oasis_open.contextserver.api.actions.ActionExecutor;
-import org.oasis_open.contextserver.api.services.EventService;
-import org.oasis_open.contextserver.api.services.ProfileService;
+import org.apache.unomi.api.*;
+import org.apache.unomi.api.actions.Action;
+import org.apache.unomi.api.actions.ActionExecutor;
+import org.apache.unomi.api.services.EventService;
+import org.apache.unomi.api.services.ProfileService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Increments the number of times the user associated with the profile tweeted.
@@ -79,9 +78,9 @@ public class IncrementTweetNumberAction implements ActionExecutor {
         final Item sourceAsItem = event.getSource();
         if (sourceAsItem instanceof CustomItem) {
             CustomItem source = (CustomItem) sourceAsItem;
-            final Map<String, Object> pageInfo = (Map<String, Object>) source.getProperties().get("pageInfo");
-            if (pageInfo != null) {
-                return (String) pageInfo.get("destinationURL");
+            final String url = (String) source.getProperties().get("url");
+            if (url != null) {
+                return url;
             }
         }
 

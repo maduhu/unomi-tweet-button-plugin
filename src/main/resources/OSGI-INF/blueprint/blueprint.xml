@@ -25,14 +25,14 @@
            xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
 
-    <reference id="profileService" interface="org.oasis_open.contextserver.api.services.ProfileService"/>
+    <reference id="profileService" interface="org.apache.unomi.api.services.ProfileService"/>
 
     <!-- Action executor -->
     <service id="incrementTweetNumberAction" auto-export="interfaces">
         <service-properties>
             <entry key="actionExecutorId" value="incrementTweetNumber"/>
         </service-properties>
-        <bean class="org.jahia.modules.unomi_tweet_button_plugin.actions.IncrementTweetNumberAction">
+        <bean class="org.apache.unomi.examples.unomi_tweet_button_plugin.actions.IncrementTweetNumberAction">
             <property name="profileService" ref="profileService"/>
         </bean>
     </service>
